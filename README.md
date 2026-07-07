@@ -50,11 +50,21 @@ That's the whole setup once you have API access. The three keys:
 | `DHARMA_DEV_TOKEN` | Scoped developer token (`dharma_org_…`) with `rag:search` (+ `rag:rerank`) |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini API key from Google AI Studio |
 
-## Credentials
+## Get Dharma AI Credentials
 
-You need access to a Dharma AI organization with RAG search enabled. In that
-organization, create or request a developer token with `rag:search` scope. Add
-`rag:rerank` too if you want the default rerank pass.
+Live lesson generation requires a Dharma AI HQ organization with Developer API access.
+
+1. Sign in to Dharma AI HQ: https://hq.dharma-ai.io
+2. Open **Portal -> Developer Suite -> Developer API**, or go directly to:
+   https://hq.dharma-ai.io/dev/developer-api?orgId=<your_org_id>
+3. You must be an organization owner/admin for that org.
+4. Create a developer token with `rag:search`. Add `rag:rerank` if you want
+   reranking enabled.
+5. Copy the token immediately. It starts with `dharma_org_` and is shown only once.
+6. Add `DHARMA_ORG_ID` and `DHARMA_DEV_TOKEN` to `.env`.
+
+If you do not have Dharma AI HQ access or an org admin role, request access from
+the Dharma AI team or your organization admin.
 
 You also need a Gemini API key from Google AI Studio. The app uses that key only
 on the local Node server; it is never sent to the browser.
