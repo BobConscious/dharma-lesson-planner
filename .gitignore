@@ -1,0 +1,18 @@
+node_modules/
+.env
+.env.local
+.env*.local
+
+# leftover from the pre-Node.js Next.js prototype (safe to delete once the dev server is stopped)
+.next/
+next-env.d.ts
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+sandbox-dev.*.log
+
+.DS_Store
+npm-debug.log*
+
+# Next.js prototype leftovers — locked by a running dev server; delete manually after stopping it
+src/app/
+next.config.mjs

@@ -1,0 +1,26 @@
+# Dharma Lesson Planner
+
+> A self-contained web tool that generates grounded, minute-by-minute Buddhist-studies lesson plans. A plain Node HTTP server serves one inline-styled HTML page and exposes POST /api/generate, which calls the Dharma AI RAG API plus Google Gemini server-side and returns a typed lesson plan whose handout citations are verified against the retrieved source text. No framework, no build step. It is a production rewrite of Dharma Developer Platform "Use Case 3".
+
+Run it: `npm install`, then copy `.env.example` to `.env` and add three keys (DHARMA_ORG_ID, DHARMA_DEV_TOKEN, GOOGLE_GENERATIVE_AI_API_KEY), then `npm start` → http://localhost:3000. Requires Node >= 18. Do not add Next.js, a bundler, or any build step. Secrets are read only in server/index.ts and must never reach the browser. On HTTP 402 token_pool_empty, halt without retry.
+
+## Start here
+- [AGENTS.md](AGENTS.md): step-by-step runbook for an agent — prerequisites, setup, start, verification curls, request/response contract, guardrails, troubleshooting.
+- [README.md](README.md): human overview, features, run steps, and why it uses a plain Node server instead of a framework.
+
+## Code
+- [server/index.ts](server/index.ts): HTTP server; serves public/index.html and handles POST /api/generate. Only place secrets are read.
+- [public/index.html](public/index.html): entire UI — inline CSS plus a JS renderer for the returned plan JSON.
+- [src/lib/schema.ts](src/lib/schema.ts): Zod schemas — the /api/generate request contract and the full LessonPlan model-output contract.
+- [src/lib/dharmaClient.ts](src/lib/dharmaClient.ts): typed Dharma RAG search + rerank client with timeout, retry/backoff, 402-halt, and 202 async poll-loop.
+- [src/lib/curriculumPlanner.ts](src/lib/curriculumPlanner.ts): the pipeline — multi-query retrieve, rerank, structured generateObject draft, citation verification, duration enforcement.
+- [src/lib/grounding.ts](src/lib/grounding.ts): near-verbatim quote verification that labels each citation verified / partial / unverified.
+
+## Reference
+- [docs/CODE-REVIEW.md](docs/CODE-REVIEW.md): the nine defects in the platform's reference Use Case 3 and how this repo fixes each.
+- [.env.example](.env.example): required and optional environment variables.
+- [preview/lesson-planner.html](preview/lesson-planner.html): static, no-keys design preview with sample content.
+
+## API
+- POST /api/generate — body: { topic, tradition, audience (beginner|intermediate|advanced), durationMinutes (15-240), format (online|IRL|hybrid), learningObjectives (1-8 strings), notes? }. Returns 200 { plan, provenance, warnings, credits }; 400 invalid_request; 402 token_pool_empty (do not retry); 500 server_misconfigured; 502 upstream/generation failure.
+- GET / — serves the UI.

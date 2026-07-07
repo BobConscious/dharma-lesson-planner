@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dharma Lesson Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:#f7f1e6;--raised:#fdfaf3;--ink:#2a2118;--ink2:#4c4234;--muted:#8a7d68;
+    --line:#ece2d0;--line2:#e0d3ba;--saffron:#c8641b;--saffron-d:#a8500f;--saffron-soft:#f3e2d0;
+    --indigo:#2e3564;--indigo-soft:#e4e6f1;--gold:#b4841f;
+    --ok:#2f7d4f;--ok-soft:#e0f0e6;--warn:#9a6a12;--warn-soft:#f6ecd4;--bad:#9c3535;--bad-soft:#f3e0dd;
+    --serif:"Fraunces","Iowan Old Style",Palatino,Georgia,serif;
+    --sans:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --shadow:0 1px 2px rgba(70,50,25,.05),0 14px 40px rgba(90,66,30,.09);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--sans);color:var(--ink);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;
+    background:radial-gradient(1100px 520px at 82% -8%,#f6e6cf 0%,rgba(246,230,207,0) 55%),radial-gradient(820px 480px at -8% -4%,#e9e6f2 0%,rgba(233,230,242,0) 48%),var(--paper);}
+  .wrap{max-width:1140px;margin:0 auto;padding:44px 24px 110px}
+  .hero{display:flex;gap:18px;align-items:flex-start;margin-bottom:30px}
+  .mark{flex:none;width:56px;height:56px;border-radius:16px;display:grid;place-items:center;color:#fff;background:linear-gradient(150deg,#d3701f,#a8500f);box-shadow:0 6px 18px rgba(168,80,15,.28)}
+  .kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--saffron);font-weight:600}
+  .hero h1{font-family:var(--serif);font-weight:600;font-size:38px;line-height:1.02;letter-spacing:-.02em;margin:4px 0 8px}
+  .hero p{margin:0;color:var(--muted);max-width:64ch}.hero em{color:var(--ink2);font-style:italic}
+  .grid{display:grid;grid-template-columns:378px 1fr;gap:28px;align-items:start}
+  @media(max-width:920px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--raised);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+  .panel{position:sticky;top:22px;padding:22px}@media(max-width:920px){.panel{position:static}}
+  .field{margin-bottom:17px}
+  .field>label{display:block;font-size:12.5px;font-weight:600;margin-bottom:7px;color:var(--ink)}
+  .field .hint{font-weight:400;color:var(--muted)}
+  input[type=text],select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line2);border-radius:10px;background:#fff;color:var(--ink);font:inherit;font-size:14px;transition:.15s}
+  textarea{resize:vertical;min-height:62px}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--saffron);box-shadow:0 0 0 3px var(--saffron-soft)}
+  input[type=range]{width:100%;accent-color:var(--saffron)}
+  .seg{display:flex;gap:6px;flex-wrap:wrap}
+  .seg button{flex:1 1 auto;padding:8px 10px;border:1px solid var(--line2);background:#fff;color:var(--muted);border-radius:10px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:.12s}
+  .seg button:hover{border-color:var(--saffron);color:var(--ink)}
+  .seg button[aria-pressed=true]{background:var(--indigo);border-color:var(--indigo);color:#fff}
+  .obj-row{display:flex;gap:6px;margin-bottom:6px}.obj-row input{flex:1}
+  .icon-btn{flex:none;width:38px;border:1px solid var(--line2);background:#fff;border-radius:10px;cursor:pointer;color:var(--muted);font-size:18px;line-height:1}
+  .icon-btn:hover{border-color:var(--bad);color:var(--bad)}
+  .link-btn{background:none;border:none;color:var(--saffron);font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:2px 0}
+  .btn-primary{width:100%;margin-top:6px;padding:13px 16px;border:none;border-radius:11px;color:#fff;font:inherit;font-size:15px;font-weight:600;cursor:pointer;background:linear-gradient(150deg,#d3701f,#a8500f);box-shadow:0 6px 16px rgba(168,80,15,.26);transition:.1s}
+  .btn-primary:hover{filter:brightness(1.05)}.btn-primary:active{transform:translateY(1px)}
+  .btn-primary:disabled{opacity:.6;cursor:progress}
+  .empty{padding:72px 32px;text-align:center;color:var(--muted)}
+  .empty .om{font-size:46px;opacity:.45;color:var(--saffron)}
+  .spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .result{padding:32px 38px}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+  .credits{font-size:12.5px;color:var(--muted)}
+  .ghost-btn{border:1px solid var(--line2);background:#fff;border-radius:10px;padding:8px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink)}
+  .ghost-btn:hover{border-color:var(--saffron)}
+  .result h2{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.1;letter-spacing:-.02em;margin:0 0 4px}
+  .subtitle{color:var(--muted);font-style:italic;font-family:var(--serif);font-size:18px;margin:0 0 16px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+  .chip{font-size:12px;font-weight:600;padding:4px 11px;border-radius:999px;background:var(--indigo-soft);color:var(--indigo)}
+  .chip.warm{background:var(--saffron-soft);color:var(--saffron-d)}.chip.ok{background:var(--ok-soft);color:var(--ok)}
+  .lead{font-size:17px;line-height:1.65;color:var(--ink2)}
+  .section{margin-top:26px;padding-top:22px;border-top:1px solid var(--line)}
+  .section>h3{font-family:var(--serif);font-weight:600;font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--saffron);margin:0 0 14px}
+  .section p{margin:0 0 10px}
+  ul.objs{list-style:none;padding:0;margin:0;display:grid;gap:9px}
+  ul.objs li{display:flex;gap:10px;align-items:baseline}
+  .bloom{flex:none;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--gold);background:var(--warn-soft);padding:3px 8px;border-radius:6px;min-width:82px;text-align:center}
+  .agenda{display:grid}
+  .slot{display:grid;grid-template-columns:70px 1fr;gap:16px;padding:14px 0;border-bottom:1px dashed var(--line2)}
+  .slot:last-child{border-bottom:none}
+  .slot .time{font-variant-numeric:tabular-nums;color:var(--indigo);font-weight:600;font-size:13px}
+  .slot .time small{display:block;color:var(--muted);font-weight:400}
+  .slot h4{margin:0 0 3px;font-size:15px;font-weight:600}
+  .slot .tag{font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:var(--saffron);margin-left:8px}
+  .slot .desc{margin:3px 0 6px;color:var(--ink2)}
+  .slot .note{font-size:13px;color:var(--muted);background:#f6efe1;border-left:3px solid var(--line2);padding:7px 11px;border-radius:0 6px 6px 0}
+  .cards2{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:640px){.cards2{grid-template-columns:1fr}}
+  .subcard{border:1px solid var(--line);border-radius:10px;padding:13px 15px;background:#fff}
+  .subcard h5{margin:0 0 6px;font-size:13px;font-weight:600;color:var(--indigo)}
+  .subcard ul{margin:0;padding-left:18px}.subcard li{margin-bottom:4px}
+  .terms dt{font-weight:600}.terms .orig{font-style:italic;color:var(--saffron-d);font-weight:400}.terms dd{margin:0 0 10px;color:var(--muted)}
+  .script{white-space:pre-wrap;font-family:var(--serif);font-size:16px;line-height:1.75;background:linear-gradient(#fff,#fbf5ea);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+  blockquote.passage{margin:0 0 12px;padding:12px 16px;border-left:3px solid var(--saffron);background:#fff;border-radius:0 8px 8px 0}
+  blockquote.passage p{font-family:var(--serif);font-size:16px;margin:0 0 6px}
+  blockquote.passage cite{font-style:normal;font-size:12.5px;color:var(--muted)}
+  ul.q{margin:0;padding-left:20px}ul.q li{margin-bottom:7px}
+  .cites{display:grid;gap:8px}
+  .cite{display:flex;align-items:baseline;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+  .cite .id{font-variant-numeric:tabular-nums;font-weight:600;color:var(--indigo);font-size:13px}
+  .cite .info{flex:1}.cite .info b{font-weight:600;font-size:14px}.cite .info span{display:block;color:var(--muted);font-size:12.5px}
+  .badge{flex:none;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em}
+  .badge.verified{background:var(--ok-soft);color:var(--ok)}.badge.partial{background:var(--warn-soft);color:var(--warn)}.badge.unverified{background:var(--bad-soft);color:var(--bad)}
+  .warnbox{margin-top:22px;border:1px solid var(--line2);background:var(--warn-soft);border-radius:10px;padding:12px 16px}
+  .warnbox h4{margin:0 0 6px;color:var(--warn);font-size:13px}.warnbox ul{margin:0;padding-left:18px;font-size:13px;color:#6b5320}
+  .errbox{margin:24px;padding:22px;border:1px solid var(--bad);background:var(--bad-soft);border-radius:14px;color:#6f2020}
+  .errbox b{display:block;margin-bottom:4px}
+  @media print{.panel,.hero p,.toolbar,.demo-note{display:none!important}.grid{grid-template-columns:1fr}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div class="mark" aria-hidden="true">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.4"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg>
+    </div>
+    <div>
+      <div class="kicker">Dharma AI · Developer Platform</div>
+      <h1>Lesson Planner</h1>
+      <p>Minute-by-minute Buddhist studies lessons, grounded in the Dharma RAG corpus and drafted with Gemini. Every quotation on the student handout is checked against the retrieved source text before it earns a <em>verified</em> badge.</p>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="card panel">
+      <div class="field"><label for="topic">Topic</label><input id="topic" type="text" value="The Four Noble Truths" /></div>
+      <div class="field"><label>Tradition</label>
+        <select id="tradition">
+          <option>Theravada</option><option>Mahayana</option><option>Vajrayana</option>
+          <option>Zen</option><option>Pure Land</option><option selected>Secular / Non-sectarian</option>
+        </select></div>
+      <div class="field"><label>Audience level</label>
+        <div class="seg" id="aud"><button data-v="beginner" aria-pressed="true">Beginner</button><button data-v="intermediate">Intermediate</button><button data-v="advanced">Advanced</button></div></div>
+      <div class="field"><label>Format</label>
+        <div class="seg" id="fmt"><button data-v="online">Online</button><button data-v="IRL" aria-pressed="true">In person</button><button data-v="hybrid">Hybrid</button></div></div>
+      <div class="field"><label for="dur">Duration <span class="hint">— <span id="durOut">60</span> min</span></label>
+        <input id="dur" type="range" min="15" max="180" step="5" value="60" /></div>
+      <div class="field"><label>Learning objectives <span class="hint">— what students can do after</span></label>
+        <div id="objs">
+          <div class="obj-row"><input type="text" value="Name the Four Noble Truths and state each in plain language" /><button class="icon-btn" aria-label="Remove">×</button></div>
+          <div class="obj-row"><input type="text" value="Distinguish dukkha as 'unsatisfactoriness' from ordinary pain" /><button class="icon-btn" aria-label="Remove">×</button></div>
+        </div>
+        <button class="link-btn" id="addObj">+ Add objective</button></div>
+      <div class="field"><label for="notes">Notes <span class="hint">— optional</span></label>
+        <textarea id="notes" placeholder="Audience specifics, constraints, prior sessions…"></textarea></div>
+      <button class="btn-primary" id="gen">Generate lesson plan</button>
+    </section>
+
+    <section class="card" id="out">
+      <div class="empty"><div class="om" aria-hidden="true">☸</div><p>Fill in a topic and objectives, then generate. The planner retrieves grounding passages, drafts a structured plan, and verifies every citation.</p></div>
+    </section>
+  </div>
+  <p class="demo-note" style="font-size:12px;color:var(--muted);margin:14px 2px 0;text-align:center">Generation runs server-side against the Dharma RAG API + Gemini using the keys in your <code>.env</code>.</p>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const durOut = $('#durOut');
+$('#dur').addEventListener('input', e => durOut.textContent = e.target.value);
+document.querySelectorAll('.seg').forEach(seg => seg.addEventListener('click', e => {
+  if(e.target.tagName!=='BUTTON') return;
+  seg.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed','false'));
+  e.target.setAttribute('aria-pressed','true');
+}));
+$('#addObj').addEventListener('click', () => {
+  const row=document.createElement('div'); row.className='obj-row';
+  row.innerHTML='<input type="text" placeholder="New objective" /><button class="icon-btn" aria-label="Remove">×</button>';
+  $('#objs').appendChild(row);
+});
+$('#objs').addEventListener('click', e => { if(e.target.classList.contains('icon-btn')) e.target.closest('.obj-row').remove(); });
+const pressed = id => document.querySelector('#'+id+' [aria-pressed=true]').dataset.v;
+
+const ACT = {opening:'Opening',teaching:'Teaching',meditation:'Practice',discussion:'Discussion',reflection:'Reflection',q_and_a:'Q & A',activity:'Activity',break:'Break',closing:'Closing'};
+const clock = m => { const h=Math.floor(m/60), mm=m%60; return h>0?`${h}:${String(mm).padStart(2,'0')}`:`${m}′`; };
+
+async function generate(){
+  const btn = $('#gen'); btn.disabled = true; const label = btn.innerHTML;
+  btn.innerHTML = '<span class="spinner"></span>Consulting the corpus…';
+  $('#out').innerHTML = '<div class="empty"><div class="om" aria-hidden="true">☸</div><p>Retrieving sources, reranking, drafting, and verifying citations…</p></div>';
+  const body = {
+    topic: $('#topic').value.trim(),
+    tradition: $('#tradition').value,
+    audience: pressed('aud'),
+    format: pressed('fmt'),
+    durationMinutes: Number($('#dur').value),
+    learningObjectives: [...document.querySelectorAll('#objs input')].map(i=>i.value.trim()).filter(Boolean),
+    notes: $('#notes').value.trim() || undefined,
+  };
+  try{
+    const res = await fetch('/api/generate', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const data = await res.json();
+    if(!res.ok){
+      const msg = data.error==='token_pool_empty' ? 'Your Dharma credit pool is empty. Fund it in the console, then try again.'
+        : data.error==='server_misconfigured' ? data.message
+        : (data.message || data.error || `Request failed (${res.status})`);
+      throw new Error(msg);
+    }
+    renderPlan(data);
+  }catch(err){
+    $('#out').innerHTML = `<div class="errbox"><b>Could not generate the plan</b>${esc(err.message)}</div>`;
+  }finally{
+    btn.disabled = false; btn.innerHTML = label;
+  }
+}
+
+function renderPlan(result){
+  const p = result.plan, w = result.warnings||[], c = result.credits||{};
+  const totalMin = p.agenda.reduce((n,a)=>n+a.durationMinutes,0);
+  const verified = p.citations.filter(x=>x.groundingStatus==='verified').length;
+
+  const objs = p.learningObjectives.map(o=>`<li><span class="bloom">${esc(o.bloomLevel)}</span><span>${esc(o.objective)}</span></li>`).join('');
+  const terms = (p.keyTerms||[]).map(t=>`<dt>${esc(t.term)}${t.paliSanskrit?` <span class="orig">· ${esc(t.paliSanskrit)}</span>`:''}</dt><dd>${esc(t.definition)}</dd>`).join('');
+  const mat = p.materialsAndPrep||{};
+  const agenda = p.agenda.map(a=>`<div class="slot"><div class="time">${clock(a.startMinute)}<small>${a.durationMinutes} min</small></div><div><h4>${esc(a.title)}<span class="tag">${ACT[a.activityType]||esc(a.activityType)}</span></h4><p class="desc">${esc(a.description)}</p>${a.teacherNotes?`<div class="note">${esc(a.teacherNotes)}</div>`:''}</div></div>`).join('');
+  const points = p.coreTeaching.talkingPoints.map(tp=>`<li>${esc(tp.point)}${(tp.sourceIds||[]).map(s=>` <sup style="color:var(--saffron);font-weight:600">${esc(s)}</sup>`).join('')}</li>`).join('');
+  const misc = (p.coreTeaching.commonMisconceptions||[]).map(m=>`<div class="subcard" style="margin-bottom:8px"><h5>Misconception</h5><p style="margin:0 0 6px">${esc(m.misconception)}</p><h5>Skillful reframe</h5><p style="margin:0">${esc(m.skillfulReframe)}</p></div>`).join('');
+  const gp = p.guidedPractice;
+  const disc = q => (q||[]).map(x=>`<li>${esc(x)}</li>`).join('');
+  const d = p.differentiation, fa = p.formatAdaptation;
+  const sub = (t,b)=>`<div class="subcard"><h5>${t}</h5><p style="margin:0">${esc(b)}</p></div>`;
+  const checks = (p.assessment||[]).map(a=>`<li>${esc(a.checkForUnderstanding)}</li>`).join('');
+  const hp = p.homePractice;
+  const passages = (p.studentHandout.passages||[]).map(x=>`<blockquote class="passage"><p>“${esc(x.quote)}”</p><cite>— ${esc(x.reference)} (${esc(x.sourceId)})</cite></blockquote>`).join('');
+  const handoutPrompts = (p.studentHandout.reflectionPrompts||[]).map(x=>`<li>${esc(x)}</li>`).join('');
+  const cites = p.citations.map(x=>`<div class="cite"><span class="id">${esc(x.id)}</span><span class="info"><b>${esc(x.title)}</b><span>${esc(x.reference)} · ${esc(x.translationStatus)} · relevance ${Number(x.score).toFixed(2)}</span></span><span class="badge ${esc(x.groundingStatus)}">${esc(x.groundingStatus)}</span></div>`).join('');
+  const warn = w.length ? `<div class="warnbox"><h4>Review before teaching</h4><ul>${w.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>` : '';
+
+  $('#out').innerHTML = `<article class="result">
+    <div class="toolbar"><span class="credits">${c.spent||0} credits spent${c.poolBalance!=null?` · ${Number(c.poolBalance).toLocaleString()} remaining`:''}</span><button class="ghost-btn" onclick="window.print()">Print / export PDF</button></div>
+    <h2>${esc(p.title)}</h2>
+    <p class="subtitle">${esc(p.subtitle)}</p>
+    <div class="meta"><span class="chip">${esc(p.tradition)}</span><span class="chip warm">${totalMin} min</span><span class="chip">${p.agenda.length} blocks</span><span class="chip ok">${verified} of ${p.citations.length} sources verified</span></div>
+    <p class="lead">${esc(p.summary)}</p>
+
+    <div class="section"><h3>Learning objectives</h3><ul class="objs">${objs}</ul></div>
+    ${terms?`<div class="section"><h3>Key terms</h3><dl class="terms">${terms}</dl></div>`:''}
+    <div class="section"><h3>Materials &amp; preparation</h3><div class="cards2">
+      <div class="subcard"><h5>Teacher</h5><ul>${(mat.teacher||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
+      <div class="subcard"><h5>Students</h5><ul>${(mat.students||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div></div>
+      ${mat.roomSetup&&mat.roomSetup!=='n/a'?`<p style="margin-top:10px"><strong>Room:</strong> ${esc(mat.roomSetup)}</p>`:''}
+      ${mat.techSetup&&mat.techSetup!=='n/a'?`<p><strong>Tech:</strong> ${esc(mat.techSetup)}</p>`:''}</div>
+
+    <div class="section"><h3>Agenda</h3><div class="agenda">${agenda}</div></div>
+    <div class="section"><h3>Core teaching</h3><ul class="q">${points}</ul>${misc?`<div style="margin-top:14px">${misc}</div>`:''}</div>
+    <div class="section"><h3>Guided practice — ${esc(gp.title)} (${gp.durationMinutes} min)</h3><div class="script">${esc(gp.script)}</div>${gp.accessibilityNotes?`<p style="margin-top:10px;color:var(--muted);font-size:14px"><strong>Accessibility:</strong> ${esc(gp.accessibilityNotes)}</p>`:''}</div>
+    <div class="section"><h3>Discussion</h3><div class="cards2"><div class="subcard"><h5>In pairs / breakout</h5><ul>${disc(p.discussionQuestions.pair)}</ul></div><div class="subcard"><h5>Full circle</h5><ul>${disc(p.discussionQuestions.group)}</ul></div></div></div>
+    <div class="section"><h3>Differentiation &amp; inclusion</h3><div class="cards2">${sub('For beginners',d.forBeginners)}${sub('For advanced',d.forAdvanced)}${sub('Trauma-informed',d.traumaInformed)}${sub('Accessibility',d.accessibility)}${sub('Online',fa.online)}${sub('In person',fa.inPerson)}</div></div>
+    <div class="section"><h3>Checks for understanding</h3><ul class="q">${checks}</ul></div>
+    <div class="section"><h3>Home practice</h3><p><strong>Assignment:</strong> ${esc(hp.assignment)}</p><p><strong>Daily practice:</strong> ${esc(hp.dailyPractice)}</p><p><strong>Reflect:</strong> ${esc(hp.reflectionPrompt)}</p></div>
+    <div class="section"><h3>Student handout</h3><p>${esc(p.studentHandout.intro)}</p>${passages}${handoutPrompts?`<ul class="q" style="margin-top:10px">${handoutPrompts}</ul>`:''}</div>
+    <div class="section"><h3>Closing</h3><p style="font-family:var(--serif);font-size:16px">${esc(p.closing.dedicationOfMerit)}</p><p style="color:var(--muted)"><strong>Next time:</strong> ${esc(p.closing.nextSessionPreview)}</p></div>
+    <div class="section"><h3>Sources &amp; grounding</h3><div class="cites">${cites}</div>
+      <p style="margin-top:10px;font-size:12.5px;color:var(--muted)"><strong>verified</strong> = a handout quote matched near-verbatim to the retrieved source · <strong>partial</strong> = cited but not directly quoted · <strong>unverified</strong> = quote not found in the retrieved text.</p></div>
+    ${warn}
+  </article>`;
+  $('#out').scrollIntoView({behavior:'smooth',block:'start'});
+}
+$('#gen').addEventListener('click', generate);
+</script>
+</body>
+</html>
