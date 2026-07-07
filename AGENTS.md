@@ -108,7 +108,7 @@ generation/upstream failure (safe to surface to the human).
 | `src/lib/schema.ts` | Zod schema = request contract + model output contract |
 | `src/lib/grounding.ts` | verifies handout quotes against retrieved text |
 | `preview/lesson-planner.html` | static, no-keys design preview |
-| `docs/CODE-REVIEW.md` | why this diverges from the platform's reference UC3 |
+| `docs/IMPLEMENTATION-NOTES.md` | implementation choices and safety guardrails |
 
 ## Guardrails — do not violate
 

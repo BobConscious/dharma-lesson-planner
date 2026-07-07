@@ -5,7 +5,6 @@
 **Grounded, minute-by-minute Buddhist studies lesson plans — with citations that are actually verified.**
 
 Built on the [Dharma AI](https://dharma-ai.io) organization-scoped RAG platform + Gemini.
-A production rewrite of Developer Platform **Use Case 3**.
 
 **Clone it, add your keys, run one command.** No build step, no framework toolchain.
 
@@ -58,13 +57,10 @@ for local platform dev), `DHARMA_USE_RERANK=false` to save 10 credits/plan,
 There is a static, no-keys design preview at `preview/lesson-planner.html` —
 open it directly in a browser to see the layout with sample content.
 
-## Why a plain Node server (and not Next.js)?
+## Why a plain Node server?
 
-The brief was: anyone can clone this, drop in keys, and it just works. A
-framework build is the enemy of that — the first draft of this repo used
-Next.js and its dev server failed to serve CSS/JS on a clean Windows checkout
-(`Failed to patch lockfile … reading 'os'`, then every `/_next/static/*.css`
-and `.js` returned 404), rendering a completely unstyled page.
+The goal is that anyone can clone this, drop in keys, and run it without a
+framework build or generated client bundle.
 
 So the app is a ~120-line Node HTTP server that serves **one HTML file with its
 CSS inline** — styling can never fail to load — and exposes a single JSON
@@ -98,16 +94,15 @@ src/lib/
   grounding.ts             near-verbatim quote verification → verified/partial/unverified
   curriculumPlanner.ts     retrieve → rerank → generateObject → verify → enforce duration
 preview/lesson-planner.html  static design preview (sample content, no keys)
-docs/CODE-REVIEW.md        what was wrong with the doc's UC3, and the fixes
+docs/IMPLEMENTATION-NOTES.md implementation choices and safety guardrails
 ```
 
 ## Why this exists
 
-The reference UC3 in the platform docs looks fine and is quietly broken: it
-hard-codes the syllabus to `[]`, parses the model's prose with string-splits on
-markers the prompt never emits, and labels its sources "verified" without
-verifying anything. See **[docs/CODE-REVIEW.md](docs/CODE-REVIEW.md)** for the
-full teardown and the nine fixes.
+Teachers need generated lesson plans they can actually inspect before teaching:
+the agenda should add up, sources should be visible, and quoted passages should
+be checked against retrieved text instead of treated as trustworthy by default.
+This repo keeps that behavior small, explicit, and easy to run locally.
 
 ## Credit cost per plan
 

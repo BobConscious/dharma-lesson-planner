@@ -1,6 +1,6 @@
 # Dharma Lesson Planner
 
-> A self-contained web tool that generates grounded, minute-by-minute Buddhist-studies lesson plans. A plain Node HTTP server serves one inline-styled HTML page and exposes POST /api/generate, which calls the Dharma AI RAG API plus Google Gemini server-side and returns a typed lesson plan whose handout citations are verified against the retrieved source text. No framework, no build step. It is a production rewrite of Dharma Developer Platform "Use Case 3".
+> A self-contained web tool that generates grounded, minute-by-minute Buddhist-studies lesson plans. A plain Node HTTP server serves one inline-styled HTML page and exposes POST /api/generate, which calls the Dharma AI RAG API plus Google Gemini server-side and returns a typed lesson plan whose handout citations are verified against the retrieved source text. No framework, no build step.
 
 Run it: `npm install`, then copy `.env.example` to `.env` and add three keys (DHARMA_ORG_ID, DHARMA_DEV_TOKEN, GOOGLE_GENERATIVE_AI_API_KEY), then `npm start` → http://localhost:3000. Requires Node >= 18. Do not add Next.js, a bundler, or any build step. Secrets are read only in server/index.ts and must never reach the browser. On HTTP 402 token_pool_empty, halt without retry.
 
@@ -17,7 +17,7 @@ Run it: `npm install`, then copy `.env.example` to `.env` and add three keys (DH
 - [src/lib/grounding.ts](src/lib/grounding.ts): near-verbatim quote verification that labels each citation verified / partial / unverified.
 
 ## Reference
-- [docs/CODE-REVIEW.md](docs/CODE-REVIEW.md): the nine defects in the platform's reference Use Case 3 and how this repo fixes each.
+- [docs/IMPLEMENTATION-NOTES.md](docs/IMPLEMENTATION-NOTES.md): implementation choices, safety guardrails, and citation-integrity notes.
 - [.env.example](.env.example): required and optional environment variables.
 - [preview/lesson-planner.html](preview/lesson-planner.html): static, no-keys design preview with sample content.
 
