@@ -16,8 +16,8 @@ webpack, or a bundler.
 ## Prerequisites
 
 - Node.js >= 18 (needs global `fetch` and `AbortController`). Check with `node -v`.
-- Three API credentials (see "Environment"). If the human has not provided them,
-  stop and ask — the tool starts without them but cannot generate a plan.
+- Three API credentials (see "Environment"). The tool starts without them but
+  cannot generate a live plan.
 
 ## Setup (run in the repo root)
 
@@ -36,7 +36,9 @@ GOOGLE_GENERATIVE_AI_API_KEY=...
 ```
 
 If you were given the keys, write them with your file tools. If not, tell the
-human which of the three are missing and pause.
+human which of the three are missing. They need access to a Dharma AI
+organization with a developer token scoped for `rag:search` and, if reranking is
+enabled, `rag:rerank`.
 
 ## Start
 
@@ -104,7 +106,7 @@ generation/upstream failure (safe to surface to the human).
 | `server/index.ts` | HTTP server; serves the page, handles `/api/generate` |
 | `public/index.html` | entire UI: inline CSS + a JS renderer for the plan JSON |
 | `src/lib/dharmaClient.ts` | typed Dharma RAG search/rerank client (retry, 402-halt, 202 poll) |
-| `src/lib/curriculumPlanner.ts` | retrieve → rerank → `generateObject` → verify → duration check |
+| `src/lib/curriculumPlanner.ts` | retrieve → rerank → structured generation → verify → duration check |
 | `src/lib/schema.ts` | Zod schema = request contract + model output contract |
 | `src/lib/grounding.ts` | verifies handout quotes against retrieved text |
 | `preview/lesson-planner.html` | static, no-keys design preview |
@@ -117,9 +119,7 @@ generation/upstream failure (safe to surface to the human).
 - On `402 token_pool_empty`, halt. Do not retry or loop.
 - Do not "fix" an empty-retrieval error by loosening grounding — the planner is
   meant to refuse to generate an ungrounded plan.
-- Keep it build-free: no Next.js/bundler. If you see leftover `src/app/`,
-  `next.config.mjs`, or `next-env.d.ts`, they are dead prototype files — ignore
-  or delete them; they are not part of the running app.
+- Keep it build-free: no Next.js, Vite, webpack, or generated client bundle.
 
 ## Common issues
 

@@ -1,34 +1,13 @@
 /**
- * CurriculumPlanner — the production rewrite of use-cases.md UC3.
+ * CurriculumPlanner.
  *
- * What changed vs. the reference implementation (see docs/CODE-REVIEW.md):
- *
- *  1. Retrieval is multi-query. The original fired one generic query
- *     ("Buddhist sutras and commentaries regarding: {topic}") and hoped it
- *     covered every learning objective. We retrieve for the topic AND each
- *     objective, dedupe by source id, and (optionally) rerank the pooled
- *     candidates so the strongest passages lead.
- *
- *  2. Output is structured, not string-split. The original asked the model for
- *     prose and then did `text.split('SYLLABUS:')` against markers the prompt
- *     never actually required — so `syllabus` was hard-coded to `[]` and the
- *     whole minute-by-minute plan was silently dropped. We use `generateObject`
- *     with the Zod schema; the agenda is a first-class typed array.
- *
- *  3. Citations are verified, not asserted. Sources are handed to the model
- *     with stable ids; the model must quote near-verbatim; the server then
- *     checks each quote against the retrieved text and labels it
- *     verified / partial / unverified.
- *
- *  4. It fails safe on empty retrieval instead of letting the model invent a
- *     scripture-flavoured lesson from nothing.
- *
- *  5. Duration is enforced — we check the agenda sums to the requested length
- *     and surface a warning if the model drifts, rather than shipping a
- *     "60-minute" plan that runs 90.
+ * The pipeline retrieves source passages, optionally reranks them, asks Gemini
+ * for a structured lesson plan, verifies handout quotations against retrieved
+ * text, and warns when the generated agenda does not match the requested
+ * duration.
  */
 
-import { generateObject } from "ai";
+import { generateText, Output } from "ai";
 import { google } from "@ai-sdk/google";
 import { DharmaDeveloperClient, type SearchResult } from "./dharmaClient";
 import { verifyGrounding } from "./grounding";
@@ -75,8 +54,7 @@ export class CurriculumPlanner {
     const retrieved = await this.retrieve(queries, warnings);
 
     if (retrieved.size === 0) {
-      // Fail safe. The original would have handed the model an empty source
-      // block and let it hallucinate a fully-cited lesson. We refuse.
+      // Fail safe rather than generating a lesson with no retrieved grounding.
       throw new Error(
         "No sources were retrieved for this topic. Refusing to generate an ungrounded lesson plan. " +
           "Try a broader topic or check the org's RAG index coverage.",
@@ -243,17 +221,17 @@ Requirements:
 - In the student handout, include real quotations that appear in the retrieved source text.`;
 
     try {
-      const { object } = await generateObject({
+      const { output } = await generateText({
         model: google(this.model),
-        schema: GeneratedLessonPlanSchema,
+        output: Output.object({ schema: GeneratedLessonPlanSchema }),
         system,
         prompt,
       });
       // The generated schema omits groundingStatus; add the default back so the
       // shape matches LessonPlan before the server fills real statuses in.
       return {
-        ...object,
-        citations: object.citations.map((c) => ({ ...c, groundingStatus: "unverified" as const })),
+        ...output,
+        citations: output.citations.map((c) => ({ ...c, groundingStatus: "unverified" as const })),
       };
     } catch (err) {
       warnings.push(

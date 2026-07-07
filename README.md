@@ -35,14 +35,14 @@ It produces what a teacher actually walks into the room with:
 ## Run it (about two minutes)
 
 ```bash
-git clone <your-fork-url> dharma-lesson-planner
+git clone https://github.com/BobConscious/dharma-lesson-planner.git
 cd dharma-lesson-planner
 npm install
 cp .env.example .env        # then paste in your three keys
 npm start                   # → http://localhost:3000
 ```
 
-That's the whole setup. The three keys:
+That's the whole setup once you have API access. The three keys:
 
 | Variable | What |
 |---|---|
@@ -50,9 +50,21 @@ That's the whole setup. The three keys:
 | `DHARMA_DEV_TOKEN` | Scoped developer token (`dharma_org_…`) with `rag:search` (+ `rag:rerank`) |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini API key from Google AI Studio |
 
-Optional: `PORT`, `DHARMA_API_BASE_URL` (point at `http://localhost:3000/api`
-for local platform dev), `DHARMA_USE_RERANK=false` to save 10 credits/plan,
-`GEMINI_MODEL`.
+## Credentials
+
+You need access to a Dharma AI organization with RAG search enabled. In that
+organization, create or request a developer token with `rag:search` scope. Add
+`rag:rerank` too if you want the default rerank pass.
+
+You also need a Gemini API key from Google AI Studio. The app uses that key only
+on the local Node server; it is never sent to the browser.
+
+If you do not already have Dharma AI API access, the UI preview still works
+without keys at `preview/lesson-planner.html`, but live generation will return
+`server_misconfigured` until `.env` is filled in.
+
+Optional: `PORT`, `DHARMA_API_BASE_URL`, `DHARMA_USE_RERANK=false` to save 10
+credits/plan, `GEMINI_MODEL`.
 
 There is a static, no-keys design preview at `preview/lesson-planner.html` —
 open it directly in a browser to see the layout with sample content.
@@ -77,7 +89,7 @@ Browser ──POST /api/generate──▶ Node server (server/index.ts — secre
                                      │     · rag/rerank              (10 cr)
                                      │     · 402-halt · 202 poll · retry/backoff
                                      │
-                                     ├─▶ Gemini via generateObject(LessonPlanSchema)
+                                     ├─▶ Gemini via structured output (LessonPlanSchema)
                                      │
                                      └─▶ grounding.ts  verify quotes → badges
 ```
@@ -92,7 +104,7 @@ src/lib/
   dharmaClient.ts          typed search + rerank client (timeout, retry, 402-halt, 202 poll, credits)
   schema.ts                Zod schema for request + the full LessonPlan (the model's output contract)
   grounding.ts             near-verbatim quote verification → verified/partial/unverified
-  curriculumPlanner.ts     retrieve → rerank → generateObject → verify → enforce duration
+  curriculumPlanner.ts     retrieve → rerank → structured generation → verify → enforce duration
 preview/lesson-planner.html  static design preview (sample content, no keys)
 docs/IMPLEMENTATION-NOTES.md implementation choices and safety guardrails
 ```

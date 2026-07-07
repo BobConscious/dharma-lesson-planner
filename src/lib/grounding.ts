@@ -1,15 +1,9 @@
 /**
  * Citation grounding.
  *
- * The original UC3 returned `verifiedSources: results.map(r => r.title)` and
- * called them "verified". They were never verified — they were just the titles
- * of whatever the search returned, regardless of whether the generated handout
- * actually quoted them faithfully. For a product whose whole thesis is
- * cognitive integrity, an unearned "verified" label is the worst possible bug.
- *
- * Here "verified" means something: every quotation the model puts in the
- * student handout is checked, near-verbatim, against the retrieved source text
- * it claims to come from. A citation is:
+ * Every quotation the model puts in the student handout is checked,
+ * near-verbatim, against the retrieved source text it claims to come from.
+ * A citation is:
  *   - verified   — its quoted passage is found in the retrieved content;
  *   - partial    — cited as a talking-point source but never quoted (nothing to
  *                  verify, but the source was really retrieved);

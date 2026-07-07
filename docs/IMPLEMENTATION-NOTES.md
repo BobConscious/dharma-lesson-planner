@@ -15,9 +15,9 @@ passages, source provenance, and warnings.
 
 ### Structured generation
 
-`src/lib/curriculumPlanner.ts` uses `generateObject` with a Zod schema. The app
-expects validated JSON in the shape it renders, which is easier to test and
-safer to consume than parsing free-form prose.
+`src/lib/curriculumPlanner.ts` uses the AI SDK structured-output API with a Zod
+schema. The app expects validated JSON in the shape it renders, which is easier
+to test and safer to consume than parsing free-form prose.
 
 ### Citation integrity
 

@@ -1,16 +1,10 @@
 /**
  * The lesson-plan domain model.
  *
- * The reference UC3 returned four fields — title, overview, an empty syllabus
- * array, and a blob of handout text — and threw away everything a teacher
- * actually walks into a room with. This schema is written from the other end:
- * what does a Buddhist studies teacher need on the page to run a real session?
- *
  * Everything here is a Zod schema so it can double as the structured-output
- * contract for the model (via the AI SDK's `generateObject`). That is the fix
- * for the original code's prompt/parser mismatch: instead of asking for prose
- * and then string-splitting on markers the prompt never required, we hand the
- * model a schema and get typed JSON back.
+ * contract for the model via the AI SDK's structured-output API. The app asks for
+ * typed JSON instead of parsing free-form prose, so rendering and validation
+ * stay predictable.
  */
 
 import { z } from "zod";

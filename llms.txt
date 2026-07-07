@@ -13,7 +13,7 @@ Run it: `npm install`, then copy `.env.example` to `.env` and add three keys (DH
 - [public/index.html](public/index.html): entire UI — inline CSS plus a JS renderer for the returned plan JSON.
 - [src/lib/schema.ts](src/lib/schema.ts): Zod schemas — the /api/generate request contract and the full LessonPlan model-output contract.
 - [src/lib/dharmaClient.ts](src/lib/dharmaClient.ts): typed Dharma RAG search + rerank client with timeout, retry/backoff, 402-halt, and 202 async poll-loop.
-- [src/lib/curriculumPlanner.ts](src/lib/curriculumPlanner.ts): the pipeline — multi-query retrieve, rerank, structured generateObject draft, citation verification, duration enforcement.
+- [src/lib/curriculumPlanner.ts](src/lib/curriculumPlanner.ts): the pipeline — multi-query retrieve, rerank, structured generation, citation verification, duration enforcement.
 - [src/lib/grounding.ts](src/lib/grounding.ts): near-verbatim quote verification that labels each citation verified / partial / unverified.
 
 ## Reference

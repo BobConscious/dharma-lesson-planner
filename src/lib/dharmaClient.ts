@@ -2,17 +2,7 @@
  * DharmaDeveloperClient — a robust, typed client for the Dharma AI
  * organization-scoped Developer APIs (RAG search + cross-encoder rerank).
  *
- * This is a deliberate rewrite of the minimal client shipped in the platform
- * docs. See docs/CODE-REVIEW.md for the full list of problems in the original
- * and why each of the behaviours below exists. In short, the reference client:
- *
- *   - returned `any`, so callers indexed into an unknown shape;
- *   - ignored the documented HTTP 202 async / poll-loop contract;
- *   - retried (or failed opaquely) on `402 token_pool_empty`, which the docs
- *     explicitly say must HALT without retry;
- *   - had no timeout, no backoff, and no credit accounting.
- *
- * Endpoints (from docs/developer-platform/quickstart.md §4):
+ * Endpoints:
  *   POST /api/orgs/{orgId}/developer/rag/search   -> 40 credits
  *   POST /api/orgs/{orgId}/developer/rag/rerank   -> 10 credits
  */
@@ -199,7 +189,7 @@ export class DharmaDeveloperClient {
     });
   }
 
-  // -- internals -----------------------------------------------------------
+  // -- request helpers ----------------------------------------------------
 
   private async post<T>(path: string, body: unknown): Promise<T> {
     return this.request<T>("POST", `${this.baseUrl}${path}`, body);
