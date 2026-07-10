@@ -13,8 +13,9 @@
 
 export interface DharmaUsage {
   creditsCharged: number;
-  poolBalanceCredits: number;
+  poolBalanceCredits?: number | null;
   source: string;
+  alreadyCharged?: boolean;
 }
 
 export interface SearchResult {
@@ -46,6 +47,22 @@ interface AsyncQueued {
   status: "queued" | "running" | string;
   pollUrl: string;
   usage: DharmaUsage;
+}
+
+interface AsyncRunResponse {
+  ok: true;
+  status?: string | null;
+  organizationId?: string;
+  runId?: string;
+  query?: string;
+  run?: {
+    status?: string;
+    query?: string;
+    result?: Record<string, unknown>;
+    output?: Record<string, unknown>;
+  };
+  results?: unknown[];
+  hqUsage?: DharmaUsage;
 }
 
 export interface RerankCandidate {
@@ -141,7 +158,7 @@ export class DharmaDeveloperClient {
       );
     }
 
-    this.baseUrl = (opts.baseUrl ?? "https://dharma-ai.io/api").replace(/\/$/, "");
+    this.baseUrl = (opts.baseUrl ?? "https://hq.dharma-ai.io/api").replace(/\/$/, "");
     // pollUrl values are absolute paths beginning with /api, so we resolve them
     // against the origin, not the /api-suffixed base.
     this.origin = this.baseUrl.replace(/\/api$/, "");
@@ -183,10 +200,14 @@ export class DharmaDeveloperClient {
     if (!trimmed) throw new Error("rerank: query must be a non-empty string");
     if (!candidates.length) throw new Error("rerank: candidates must be non-empty");
 
-    return this.post<RerankResponse>(`/orgs/${this.orgId}/developer/rag/rerank`, {
+    const data = await this.post<RerankResponse | AsyncQueued>(`/orgs/${this.orgId}/developer/rag/rerank`, {
       query: trimmed,
       candidates: candidates.map((c) => ({ id: c.id, text: c.text })),
     });
+    if ("async" in data && (data as AsyncQueued).async) {
+      return this.pollForRerank(data as AsyncQueued);
+    }
+    return data as RerankResponse;
   }
 
   // -- request helpers ----------------------------------------------------
@@ -271,19 +292,17 @@ export class DharmaDeveloperClient {
   }
 
   private async pollForSearch(queued: AsyncQueued): Promise<SearchResponse> {
-    this.accountForUsage(queued.usage);
     const url = `${this.origin}${queued.pollUrl}`;
 
     for (let i = 0; i < this.maxPollAttempts; i++) {
       await sleep(this.pollIntervalMs);
-      const data = await this.request<
-        (SearchResponse & { status?: string }) | (AsyncQueued & { results?: never })
-      >("GET", url);
+      const data = await this.request<SearchResponse | AsyncRunResponse | AsyncQueued>("GET", url);
 
-      const status = "status" in data ? data.status : undefined;
-      if (!status || status === "completed" || status === "succeeded" || "results" in data) {
-        if ("results" in data && Array.isArray((data as SearchResponse).results)) {
-          return data as SearchResponse;
+      const status = this.asyncStatus(data);
+      if (!status || status === "completed" || status === "succeeded") {
+        const response = this.completedSearchResponse(queued, data);
+        if (response) {
+          return response;
         }
       }
       if (status === "failed" || status === "error") {
@@ -295,6 +314,97 @@ export class DharmaDeveloperClient {
       504,
       "async_timeout",
     );
+  }
+
+  private async pollForRerank(queued: AsyncQueued): Promise<RerankResponse> {
+    const url = `${this.origin}${queued.pollUrl}`;
+
+    for (let i = 0; i < this.maxPollAttempts; i++) {
+      await sleep(this.pollIntervalMs);
+      const data = await this.request<RerankResponse | AsyncRunResponse | AsyncQueued>("GET", url);
+
+      const status = this.asyncStatus(data);
+      if (!status || status === "completed" || status === "succeeded") {
+        const response = this.completedRerankResponse(data);
+        if (response) {
+          return response;
+        }
+      }
+      if (status === "failed" || status === "error") {
+        throw new DharmaApiError(`Async rerank ${queued.runId} failed`, 500, "async_failed");
+      }
+    }
+    throw new DharmaApiError(
+      `Async rerank ${queued.runId} did not complete after ${this.maxPollAttempts} polls`,
+      504,
+      "async_timeout",
+    );
+  }
+
+  private asyncStatus(data: SearchResponse | RerankResponse | AsyncRunResponse | AsyncQueued): string | undefined {
+    const direct = "status" in data && typeof data.status === "string" ? data.status.toLowerCase() : "";
+    const nested = "run" in data && typeof data.run?.status === "string" ? data.run.status.toLowerCase() : "";
+    return direct || nested || undefined;
+  }
+
+  private completedSearchResponse(
+    queued: AsyncQueued,
+    data: SearchResponse | AsyncRunResponse | AsyncQueued,
+  ): SearchResponse | null {
+    if ("usage" in data && Array.isArray((data as SearchResponse).results)) {
+      return data as SearchResponse;
+    }
+    const runResult = this.runResult(data);
+    const results = this.resultArray(data, runResult) as SearchResult[];
+    if (!results) return null;
+    const usage = this.completedUsage(data);
+    this.accountForUsage(usage);
+    return {
+      ok: true,
+      organizationId: ("organizationId" in data && data.organizationId) || queued.organizationId,
+      usage,
+      query:
+        ("query" in data && typeof data.query === "string" ? data.query : undefined) ||
+        ("run" in data && typeof data.run?.query === "string" ? data.run.query : undefined) ||
+        queued.runId,
+      results,
+      answer: typeof runResult?.answer === "string" ? runResult.answer : undefined,
+    };
+  }
+
+  private completedRerankResponse(data: RerankResponse | AsyncRunResponse | AsyncQueued): RerankResponse | null {
+    if ("usage" in data && Array.isArray((data as RerankResponse).results)) {
+      return data as RerankResponse;
+    }
+    const runResult = this.runResult(data);
+    const results = this.resultArray(data, runResult) as RerankResult[];
+    if (!results) return null;
+    const usage = this.completedUsage(data);
+    this.accountForUsage(usage);
+    return { ok: true, usage, results };
+  }
+
+  private runResult(data: SearchResponse | RerankResponse | AsyncRunResponse | AsyncQueued): Record<string, unknown> | null {
+    if (!("run" in data)) return null;
+    const result = data.run?.result || data.run?.output;
+    return result && typeof result === "object" && !Array.isArray(result)
+      ? result
+      : null;
+  }
+
+  private resultArray(
+    data: SearchResponse | RerankResponse | AsyncRunResponse | AsyncQueued,
+    runResult: Record<string, unknown> | null,
+  ): unknown[] | null {
+    if ("results" in data && Array.isArray(data.results)) return data.results;
+    if (runResult && Array.isArray(runResult.results)) return runResult.results;
+    return null;
+  }
+
+  private completedUsage(data: SearchResponse | RerankResponse | AsyncRunResponse | AsyncQueued): DharmaUsage {
+    if ("hqUsage" in data && data.hqUsage) return data.hqUsage;
+    if ("usage" in data && data.usage) return data.usage;
+    return { creditsCharged: 0, poolBalanceCredits: null, source: "unknown" };
   }
 
   private accountForUsage(usage?: DharmaUsage) {
